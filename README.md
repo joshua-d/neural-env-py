@@ -42,5 +42,5 @@ When reproduction is finished, nt.network[0] points to the best-performing neura
 nt.input_data(nt.network[0], data1)
 ```
 
-The list nt.network[0].neuron[nt.output_layer] holds the values of the neural network's output neurons, and they should be close to the values of the desired output for the inputted datum, in this case, output1.
+The list `nt.network[0].neuron[nt.output_layer]` holds the values of the neural network's output neurons, and they should be close to the values of the desired output for the inputted datum, in this case, output1.
   

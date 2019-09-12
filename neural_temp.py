@@ -322,7 +322,7 @@ class NeuralTemp:
             if self.network[0].fitness < 1 or self.network[0].fitness < fitness_threshold:
                 if self.network[0].fitness < fitness_threshold and self.cost_degree == 1:
                     ended = True
-                elif self.network[0].fitness < fitness_threshold / 2:
+                elif self.network[0].fitness < 0.5:
                     print("Reproducing " + str(ensure_amt) + " times for ensurance...")
                     for i in range(0, ensure_amt):
                         self.reproduce()

@@ -48,6 +48,29 @@ class NeuralTemp:
             for i in range(0, nt.output_neuron_amt):
                 self.neuron[nt.output_layer].append(nt.Neuron(nt.output_layer, i, self.nbgvs))
 
+        def input_data(self, input_list):
+            for i in range(0, self.nt.input_neuron_amt):
+                self.neuron[0][i].value = input_list[i]
+
+            for i in range(1, self.nt.layer_amt):
+                for j in range(0, len(self.neuron[i])):
+                    weight_total = 0
+                    for weight in self.neuron[i][j].weights:
+                        weight_total += weight.w_neuron.value * weight.value
+                    weight_total += self.neuron[i][j].bias
+                    try:
+                        self.neuron[i][j].value = 1 / (1 + 2.718 ** (weight_total * (-1)))
+                    except OverflowError:
+                        if weight_total > 0:
+                            self.neuron[i][j].value = 1.0
+                        else:
+                            self.neuron[i][j].value = 0.0
+
+                    if self.neuron[i][j].value < self.nt.neuron_floor:
+                        self.neuron[i][j].value = 0
+                    elif self.neuron[i][j].value > self.nt.neuron_cap:
+                        self.neuron[i][j].value = 1
+
         def add_weight(self, neuron, w_neuron, value):
             neuron.weights.append(self.nt.Weight(w_neuron, value))
             w_neuron.weighted.append(neuron)
@@ -128,6 +151,12 @@ class NeuralTemp:
                         return False
             return True
 
+        def get_neuron_value(self, layer, ID):
+            return self.neuron[layer][ID].value
+
+        def get_output_neurons(self):
+            return self.neuron[self.nt.output_layer]
+
     def __init__(self, pop_size, input_neuron_amt, max_h_neuron_amt, output_neuron_amt, max_hidden_layer_amt, fitness_function=0):
         self.pop_size = pop_size
         self.input_neuron_amt = input_neuron_amt
@@ -146,7 +175,7 @@ class NeuralTemp:
         self.inputs = []
         self.desired_outputs = []
 
-        self.network = []
+        self.networks = []
 
         self.neuron_cap = 0.999999
         self.neuron_floor = 0.000001
@@ -158,10 +187,10 @@ class NeuralTemp:
 
     def create_networks(self):
         for i in range(0, self.pop_size):
-            self.network.append(self.Network(self))
+            self.networks.append(self.Network(self))
 
     def initialize_networks(self):
-        for network in self.network:
+        for network in self.networks:
             for i in range(0, self.output_layer):
                 if rand.randint(0, self.output_neuron_amt) < network.wgs:
                     network.generate_weight()
@@ -170,36 +199,14 @@ class NeuralTemp:
         self.inputs.append(input_list)
         self.desired_outputs.append(output_list)
 
-    def input_data(self, network, input_list):
-        for i in range(0, self.input_neuron_amt):
-            network.neuron[0][i].value = input_list[i]
-
-        for i in range(1, self.layer_amt):
-            for j in range(0, len(network.neuron[i])):
-                weight_total = 0
-                for weight in network.neuron[i][j].weights:
-                    weight_total += weight.w_neuron.value * weight.value
-                weight_total += network.neuron[i][j].bias
-                try:
-                    network.neuron[i][j].value = 1 / (1 + 2.718 ** (weight_total*(-1)))
-                except OverflowError:
-                    if weight_total > 0:
-                        network.neuron[i][j].value = 1.0
-                    else:
-                        network.neuron[i][j].value = 0.0
-
-                if network.neuron[i][j].value < self.neuron_floor:
-                    network.neuron[i][j].value = 0
-                elif network.neuron[i][j].value > self.neuron_cap:
-                    network.neuron[i][j].value = 1
-
     def evaluate_fitnesses(self, nt):
-        for network in self.network:
-            network.fitness = 0
-            for i in range(0, len(self.inputs)):
-                self.input_data(network, self.inputs[i])
-                for j in range(0, self.output_neuron_amt):
-                    network.fitness += abs(self.desired_outputs[i][j] - network.neuron[self.output_layer][j].value) ** self.cost_degree
+        if len(self.inputs) != 0:
+            for network in self.networks:
+                network.fitness = 0
+                for i in range(0, len(self.inputs)):
+                    network.input_data(self.inputs[i])
+                    for j in range(0, self.output_neuron_amt):
+                        network.fitness += abs(self.desired_outputs[i][j] - network.neuron[self.output_layer][j].value) ** self.cost_degree
 
     def produce_child(self, parent):
         child = self.Network(self)
@@ -294,10 +301,10 @@ class NeuralTemp:
 
         self.fitness_function(self)
 
-        self.network = sorted(self.network, key=lambda net: net.fitness)
+        self.networks = sorted(self.networks, key=lambda net: net.fitness)
 
         for i in range(0, int(self.pop_size / 2)):
-            self.network[i + int(self.pop_size / 2)] = self.produce_child(self.network[i])
+            self.networks[i + int(self.pop_size / 2)] = self.produce_child(self.networks[i])
 
     def auto_reproduce(self, fitness_threshold=1, ensure_amt=10, log_interval=1):
 
@@ -315,14 +322,14 @@ class NeuralTemp:
             self.reproduce()
 
             if log_counter % log_interval == 0:
-                print(self.network[0].fitness)
+                print(self.networks[0].fitness)
 
             log_counter += 1
 
-            if self.network[0].fitness < 1 or self.network[0].fitness < fitness_threshold:
-                if self.network[0].fitness < fitness_threshold and self.cost_degree == 1:
+            if self.networks[0].fitness < 1 or self.networks[0].fitness < fitness_threshold:
+                if self.networks[0].fitness < fitness_threshold and self.cost_degree == 1:
                     ended = True
-                elif self.network[0].fitness < 0.5:
+                elif self.networks[0].fitness < 0.5:
                     print("Reproducing " + str(ensure_amt) + " times for ensurance...")
                     for i in range(0, ensure_amt):
                         self.reproduce()
@@ -330,13 +337,13 @@ class NeuralTemp:
                     print("Cost degree: " + str(self.cost_degree))
                     failures = 0
 
-            if last_fitness - self.network[0].fitness < failure_threshold:
+            if last_fitness - self.networks[0].fitness < failure_threshold:
                 failures += 1
                 successes = 0
             else:
                 failures = 0
                 successes += 1
-                last_fitness = self.network[0].fitness
+                last_fitness = self.networks[0].fitness
             if failures >= failure_cap:
                 self.cost_degree += 1
                 print("Cost degree: " + str(self.cost_degree))
@@ -348,5 +355,8 @@ class NeuralTemp:
 
     def reproduce_until(self, max_fitness):
         self.reproduce()
-        while self.network[0].fitness > max_fitness:
+        while self.networks[0].fitness > max_fitness:
             self.reproduce()
+
+    def get_best_network(self):
+        return self.networks[0]

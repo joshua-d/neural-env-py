@@ -1,7 +1,7 @@
 # neural_temp.py
 A python module for creating neural networks and conducting machine learning using NEAT.
 
-![](Pong.gif)
+![](Pong/Pong.gif)
 
 *AI learning to play Pong using neural_temp.py*
 

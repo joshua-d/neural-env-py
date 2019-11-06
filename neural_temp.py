@@ -306,7 +306,7 @@ class NeuralTemp:
         for i in range(0, int(self.pop_size / 2)):
             self.networks[i + int(self.pop_size / 2)] = self.produce_child(self.networks[i])
 
-    def auto_reproduce(self, fitness_threshold=1, assure_amt=10, log_interval=1):
+    def auto_reproduce(self, fitness_threshold=1, ensure_amt=10, log_interval=1):
 
         ended = False
 
@@ -330,8 +330,8 @@ class NeuralTemp:
                 if self.networks[0].fitness < fitness_threshold and self.cost_degree == 1:
                     ended = True
                 elif self.networks[0].fitness < 0.5:
-                    print("Reproducing " + str(assure_amt) + " times for assurance...")
-                    for i in range(0, assure_amt):
+                    print("Reproducing " + str(ensure_amt) + " times for ensurance...")
+                    for i in range(0, ensure_amt):
                         self.reproduce()
                     self.cost_degree -= 1
                     print("Cost degree: " + str(self.cost_degree))

@@ -1,4 +1,4 @@
-# neural_temp.py
+# neural_env.py
 A python module for creating neural networks and conducting machine learning using NEAT.
 
 ![](Pong/Pong.gif)

@@ -3,9 +3,9 @@ A python module for creating neural networks and conducting machine learning usi
 
 ![](Pong/Pong.gif)
 
-*AI learning to play Pong using neural_temp.py*
+*AI learning to play Pong using neural_env.py*
 
-*Input neurons are: ball x-position, ball y-position, ball x-velocity, ball y-velocity, paddle y-position*
+*Input neurons: ball x-position, ball y-position, ball x-velocity, ball y-velocity, paddle y-position*
 
 *Notice how after only 10 minutes of learning, the AI starts to learn how to use the ball's angle to predict where the paddle should be, rather than just matching the y position of the paddle with the y position of the ball.*
 

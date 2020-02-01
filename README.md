@@ -14,9 +14,9 @@ A python module for creating neural networks and conducting machine learning usi
 Setting up your neural network environment with neural_temp.py is simple:
 
 ```
-import neural_temp
+import neural_env
 
-nt = neural_temp.NeuralTemp(
+nenv = neural_env.NeuralEnv(
   
     Population size,
     Amount of neurons in the input layer,
@@ -34,20 +34,20 @@ Next, designate the inputs of each member of the population to the inputs in the
 For a data set of two input lists: `data1` and `data2`, with desired output lists: `output1` and `output2`, respectively:
 
 ```
-nt.add_input_output(data1, output1)
-nt.add_input_output(data2, output2)
+nenv.add_input_output(data1, output1)
+nenv.add_input_output(data2, output2)
 ```
 
 The networks are ready to be reproduced to develop a neural network that can produce the desired results of the data set.
 
 ```
-nt.auto_reproduce()
+nenv.auto_reproduce()
 ```
 
 When reproduction is finished, nt.network[0] points to the best-performing neural network. To test, input the values of a data list into the input neurons of the network:
 
 ```
-nt.network[0].input_data(data1)
+nenv.network[0].input_data(data1)
 ```
 
 The list `nt.network[0].neuron[nt.output_layer]` holds the values of the neural network's output neurons, and they should be close to the values of the desired output for the inputted data, in this case, output1.

@@ -28,9 +28,9 @@ NEAT involves using natural selection, or survival of the fittest, to facilitate
 
 The process of training a neural network to produce a desired output when it is given a specific input is as follows:
 1) Begin with a population of randomly generated neural networks with different genes and characteristics.
-2) Evaulate each neural network's performance (fitness) by comparing its output to the desired output.
-3) Allow the neural networks that performed the best (have the best fitness) to reproduce, producing new neural networks of slightly different characteristics and genes (based on the genes of the parents). These new neural networks replace those with worse fitness.
-4) Repeat fitness evaulation and reproduction until a neural network of desired performance is produced.
+2) Evaluate each neural network's performance by comparing its output to the desired output.
+3) Allow the neural networks that performed the best to reproduce, producing new neural networks of slightly different characteristics and genes (based on the genes of the parents). These new neural networks replace those that performed the worst.
+4) Repeat performance evaulation and reproduction until a neural network of desired performance is produced.
 
 <br>
 
@@ -85,6 +85,8 @@ nenv = neural_env.NeuralEnv(
   ```
   
 Here, a new instance of NeuralEnv has been constructed, and a population of neural networks have been generated with random properties fitting the arguments provided.
+
+The next step is to set up a fitness evaluation method.
 
 <br>
 
@@ -170,12 +172,25 @@ nenv.reproduce()
 
 #### Reproduction
 
-When reproduction is finished, nenv.networks[0] points to the best-performing neural network. To test, input the values of a data list into the input neurons of the network:
+To obtain an efficient neural network, reproduce continuously while periodically checking the fitnesses of the networks.
+
+If using **fitness evaluation method 1**, `nenv.auto_reproduce(fitness_threshold)` may be called to do this automatically. The function will continuously reproduce and log the fitness value of the best network periodically. Reproduction will cease when a network's fitness reaches below the `fitness_threshold`, default value `0.5`.
+
+To test the neural network, use `input_data(input_list)` to input a dataset:
 
 ```
-nenv.network[0].input_data(data1)
+input_1 = [1, 0, 1, 0]
+input_2 = [1, 1, 1, 0]
+
+desired_output_1 = [0, 1]
+desired_output_2 = [1, 0]
+
+
+nenv.get_best_network().input_data(input_1)
+
+for output_neuron in nenv.get_best_network().get_output_neurons():
+  print(output_neuron.value)
+
 ```
 
-The list `nenv.network[0].neuron[nenv.output_layer]` holds the values of the neural network's output neurons, and they should be close to the values of the desired output for the inputted data, in this case, output1.
-  
-This list can be obtained using `nenv.get_best_network().get_output_neurons()`.
+The output neuron values should be close to the desired output values corresponding to the inputted data set. In this example, after inputting `input_1` to the neural network, its output neuron values should be close to `0 1`.

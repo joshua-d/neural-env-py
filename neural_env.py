@@ -72,6 +72,10 @@ class NeuralEnv:
                         self.neuron[i][j].value = 1
 
         def add_weight(self, neuron, w_neuron, value):
+            for weight in neuron.weights:
+                if weight.w_neuron == w_neuron:
+                    weight.value = value
+                    return
             neuron.weights.append(self.nenv.Weight(w_neuron, value))
             w_neuron.weighted.append(neuron)
 
@@ -329,7 +333,7 @@ class NeuralEnv:
             if self.networks[0].fitness < 1 or self.networks[0].fitness < fitness_threshold:
                 if self.networks[0].fitness < fitness_threshold and self.cost_degree == 1:
                     ended = True
-                elif self.networks[0].fitness < 0.5:
+                elif self.networks[0].fitness < fitness_threshold:
                     print("Reproducing " + str(assure_amt) + " times for assurance...")
                     for i in range(0, assure_amt):
                         self.reproduce()

@@ -11,7 +11,7 @@ A python module for creating neural networks and conducting machine learning usi
 
 <br>
 
-### Overview
+## Overview
 
 The neural_env module provides tools for easy setup of a machine learning environment based on neuroevolution of augmenting topologies, or NEAT.
 
@@ -54,7 +54,7 @@ After specification of a fitness evalutation method, the environment is ready fo
 
 <br>
 
-### Basic Usage
+## Basic Usage
 
 Setting up your environment with neural_env.py is simple:
 

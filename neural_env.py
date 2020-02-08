@@ -1,4 +1,5 @@
 import random as rand
+import json
 
 
 class NeuralEnv:
@@ -13,11 +14,36 @@ class NeuralEnv:
             self.weighted = []
             self.bias = rand.uniform(nbgvs * -1, nbgvs)
 
+        def to_dict(self):
+            neur_dict = {
+                'layer': self.layer,
+                'id': self.id,
+                'value': self.value,
+                'weights': [],
+                'weighted': [],
+                'bias': self.bias
+            }
+
+            for weight in self.weights:
+                neur_dict['weights'].append(weight.to_dict())
+
+            for neuron in self.weighted:
+                neur_dict['weighted'].append([neuron.layer, neuron.id])
+
+            return neur_dict
+
     class Weight:
 
         def __init__(self, w_neuron, value):
             self.w_neuron = w_neuron
             self.value = value
+
+        def to_dict(self):
+            weight_dict = {
+                'w_neuron': [self.w_neuron.layer, self.w_neuron.id],
+                'value': self.value
+            }
+            return weight_dict
 
     class Network:
 
@@ -46,7 +72,7 @@ class NeuralEnv:
                 self.neuron[0].append(nenv.Neuron(0, i))
 
             for i in range(0, nenv.output_neuron_amt):
-                self.neuron[nenv.output_layer].append(nenv.Neuron(nenv.output_layer, i, self.nbgvs))
+                self.neuron[nenv.output_layer].append(nenv.Neuron(nenv.output_layer, i))
 
         def input_data(self, input_list):
             for i in range(0, self.nenv.input_neuron_amt):
@@ -80,8 +106,8 @@ class NeuralEnv:
             w_neuron.weighted.append(neuron)
 
         def generate_weight(self):
-            neuron_list = self.get_neuron_list(0, self.nenv.layer_amt)
-            neuron = neuron_list[rand.randint(self.nenv.input_neuron_amt, len(neuron_list) - 1)]
+            neuron_list = self.get_neuron_list(1, self.nenv.layer_amt)
+            neuron = neuron_list[rand.randint(0, len(neuron_list) - 1)]
             w_neuron_list = self.get_neuron_list(0, neuron.layer)
             w_neuron = w_neuron_list[rand.randint(0, len(w_neuron_list) - 1)]
 
@@ -139,7 +165,12 @@ class NeuralEnv:
         def generate_bias(self):
             neuron_list = self.get_neuron_list(1, self.nenv.layer_amt)
             neur = rand.randint(0, len(neuron_list) - 1)
-            neuron_list[neur].bias = rand.uniform()
+            neuron_list[neur].bias = rand.uniform(self.nbgvs * -1, self.nbgvs)
+
+        def remove_bias(self):
+            neuron_list = self.get_neuron_list(1, self.nenv.layer_amt)
+            neur = rand.randint(0, len(neuron_list) - 1)
+            neuron_list[neur].bias = 0
 
         def get_neuron_list(self, start_layer, end_layer):
             neuron_list = []
@@ -160,6 +191,29 @@ class NeuralEnv:
 
         def get_output_neurons(self):
             return self.neuron[self.nenv.output_layer]
+        
+        def to_dict(self):
+            net_dict = {
+                'subjectivity': self.subjectivity,
+                'ngs': self.ngs,
+                'nrs': self.nrs,
+                'wgs': self.wgs,
+                'wrs': self.wrs,
+                'nbgs': self.nbgs,
+                'nbrs': self.nbrs,
+                'wgvs': self.wgvs,
+                'nbgvs': self.nbgvs,
+                'nbvs': self.nbgvs,
+                'wvs': self.wvs,
+                'neuron': []
+            }
+
+            for i in range(self.nenv.layer_amt):
+                net_dict['neuron'].append([])
+                for j in range(len(self.neuron[i])):
+                    net_dict['neuron'][i].append(self.neuron[i][j].to_dict())
+
+            return net_dict
 
     def __init__(self, pop_size, input_neuron_amt, max_h_neuron_amt, output_neuron_amt, max_hidden_layer_amt, fitness_function=0):
         self.pop_size = pop_size
@@ -195,15 +249,17 @@ class NeuralEnv:
 
     def initialize_networks(self):
         for network in self.networks:
-            for i in range(0, self.output_layer):
+            for i in range(0, self.output_neuron_amt):
                 if rand.randint(0, self.output_neuron_amt) < network.wgs:
                     network.generate_weight()
+                if rand.randint(0, self.output_neuron_amt) < network.nbgs:
+                    self.networks[i].generate_bias()
 
     def add_input_output(self, input_list, output_list):
         self.inputs.append(input_list)
         self.desired_outputs.append(output_list)
 
-    def evaluate_fitnesses(self, nt):
+    def evaluate_fitnesses(self, nenv):
         if len(self.inputs) != 0:
             for network in self.networks:
                 network.fitness = 0
@@ -287,17 +343,30 @@ class NeuralEnv:
             neuron_rem_amt = rand.randint(0, int(parent.wrs))
         except ValueError:
             neuron_rem_amt = 0
+        try:
+            bias_gen_amt = rand.randint(0, int(parent.nbgs))
+        except ValueError:
+            bias_gen_amt = 0
+        try:
+            bias_rem_amt = rand.randint(0, int(parent.nbrs))
+        except ValueError:
+            bias_rem_amt = 0
 
         if self.max_hidden_layer_amt != 0:
-            for i in range(1, neuron_rem_amt):
+            for i in range(0, neuron_rem_amt):
                 child.remove_neuron()
-            for i in range(1, neuron_gen_amt):
+            for i in range(0, neuron_gen_amt):
                 child.generate_neuron()
 
-        for i in range(1, weight_rem_amt):
+        for i in range(0, weight_rem_amt):
             child.remove_weight()
-        for i in range(1, weight_gen_amt):
+        for i in range(0, weight_gen_amt):
             child.generate_weight()
+
+        for i in range(0, bias_rem_amt):
+            child.remove_bias()
+        for i in range(0, bias_gen_amt):
+            child.generate_bias()
 
         return child
 
@@ -364,3 +433,54 @@ class NeuralEnv:
 
     def get_best_network(self):
         return self.networks[0]
+
+    def export_network(self, network, file_name):
+        net_dict = network.to_dict()
+        w_file = open(file_name, "w")
+        w_file.write(json.dumps(net_dict))
+        w_file.close()
+
+        return net_dict
+
+    def import_network(self, file_name):
+        r_file = open(file_name, "r")
+        net_dict = json.loads(r_file.read())
+        r_file.close()
+
+        network = self.Network(self)
+
+        network.subjectivity = net_dict['subjectivity']
+        network.ngs = net_dict['ngs']
+        network.nrs = net_dict['nrs']
+        network.wgs = net_dict['wgs']
+        network.wrs = net_dict['wrs']
+        network.nbgs = net_dict['nbgs']
+        network.nbrs = net_dict['nbrs']
+        network.wgvs = net_dict['wgvs']
+        network.nbgvs = net_dict['nbgvs']
+        network.nbvs = net_dict['nbvs']
+        network.wvs = net_dict['wvs']
+
+        for i in range(self.layer_amt):
+            for neur_dict in net_dict['neuron'][i]:
+                if self.output_layer > i > 0:
+                    neuron = self.Neuron(neur_dict['layer'], neur_dict['id'])
+                    network.neuron[i].append(neuron)
+                else:
+                    neuron = network.neuron[i][neur_dict['id']]
+
+                for weight_dict in neur_dict['weights']:
+                    weight = self.Weight(network.neuron[weight_dict['w_neuron'][0]][weight_dict['w_neuron'][1]], weight_dict['value'])
+                    neuron.weights.append(weight)
+
+                neuron.value = neur_dict['value']
+                neuron.bias = neur_dict['bias']
+
+        for i in range(self.layer_amt):
+            for neur_dict in net_dict['neuron'][i]:
+                neuron = network.neuron[i][neur_dict['id']]
+
+                for neur in neur_dict['weighted']:
+                    neuron.weighted.append(network.neuron[neur[0]][neur[1]])
+
+        return network
